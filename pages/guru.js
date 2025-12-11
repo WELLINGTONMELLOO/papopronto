@@ -1,189 +1,227 @@
 // pages/guru.js
 import { useState } from "react";
+import Layout from "../components/Layout";
 
 export default function GuruPage() {
-  const [mensagens, setMensagens] = useState([
-    {
-      autor: "guru",
-      texto:
-        "Fala, guerreiro(a)! Me conta o que a pessoa falou ou qual é a situação, que eu deixo o papo pronto pra você mandar.",
-    },
-  ]);
+  const [modo, setModo] = useState("chat"); // "chat" | "foto"
+  const [textoDuvida, setTextoDuvida] = useState("");
+  const [arquivo, setArquivo] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [comentariosExemplo, setComentariosExemplo] = useState([]);
 
-  const [textoUsuario, setTextoUsuario] = useState("");
-  const [processando, setProcessando] = useState(false);
+  function mudarParaChat() {
+    setModo("chat");
+  }
 
-  function gerarRespostaSimulada(texto) {
-    const t = texto.toLowerCase();
+  function mudarParaFoto() {
+    setModo("foto");
+  }
 
-    // Exemplos simples de "inteligência" baseada em palavras-chave
-    if (t.includes("emocionad")) {
-      return (
-        "Manda assim: \"Calma, então cancela o carro de som que eu ia mandar 😂 " +
-        "Brincadeira. Vamos na moral: me conta o que você curte fazer no fim de semana?\""
+  function handleArquivoChange(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setArquivo(file);
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+
+    // Exemplo de como os comentários podem aparecer no futuro
+    setComentariosExemplo([
+      "Esse cenário aí tá bonito, mas você conseguiu roubar a cena fácil.",
+      "Gostei do detalhe na foto (fundo, pose, expressão), dá pra puxar assunto só sobre isso.",
+      "Se eu comentar que a foto tá boa, ainda assim vai ficar abaixo do tanto que você entregou nela.",
+    ]);
+  }
+
+  function handleGerarIdeiasFake() {
+    if (!arquivo) {
+      alert(
+        "No futuro, aqui vamos analisar a foto de verdade com IA. Por enquanto, suba uma imagem só pra ver como a interface fica."
       );
+      return;
     }
 
-    if (t.includes("sumiu") || t.includes("não responde") || t.includes("nao responde")) {
-      return (
-        "Uma opção é mandar algo leve, sem cobrança: " +
-        "\"Sumiu, hein? Vou fingir que não senti falta… mas só dessa vez 😂\" " +
-        "Se a pessoa responder de boa, você puxa assunto em cima."
-      );
-    }
-
-    if (
-      t.includes("primeiro encontro") ||
-      t.includes("primeiro rolê") ||
-      t.includes("primeiro role")
-    ) {
-      return (
-        "Você pode mandar algo tipo: " +
-        "\"Curti muito conversar com você por aqui. Bora transformar esse papo em um café ou um barzinho essa semana?\" " +
-        "Simples, direto e sem pressão."
-      );
-    }
-
-    if (t.includes("termin") || t.includes("termino") || t.includes("terminou")) {
-      return (
-        "Aqui é terreno delicado. Tenta algo sincero e leve: " +
-        "\"Eu sei que a fase não é fácil e respeito totalmente seu tempo. " +
-        "Se você quiser alguém pra distrair a cabeça, ouvir e dar risada, tô por aqui.\""
-      );
-    }
-
-    if (t.includes("bom dia")) {
-      return (
-        "Sugestão de bom dia diferente: " +
-        "\"Bom dia! Passei aqui só pra te lembrar que alguém torce pra seu dia ser incrível (no caso, eu).\""
-      );
-    }
-
-    // Resposta padrão
-    return (
-      "Entendi a situação. Testa algo assim: " +
-      "\"Tô sendo sincero(a): curti muito nossa conversa e queria continuar esse papo. " +
-      "O que você acha da gente marcar um rolê com calma qualquer dia desses?\" " +
-      "Se quiser, me manda mais detalhes que eu refino a resposta."
+    // Aqui, no futuro, vamos chamar a API com IA de visão.
+    alert(
+      "Versão demo: quando a IA estiver conectada, esse botão vai gerar comentários específicos pra essa foto."
     );
   }
 
-  function handleEnviar() {
-    const texto = textoUsuario.trim();
-    if (!texto || processando) return;
-
-    // Adiciona mensagem do usuário
-    const novaMensagemUsuario = {
-      autor: "usuario",
-      texto,
-    };
-
-    setMensagens((msgs) => [...msgs, novaMensagemUsuario]);
-    setTextoUsuario("");
-    setProcessando(true);
-
-    // Simula "pensando"
-    setTimeout(() => {
-      const resposta = gerarRespostaSimulada(texto);
-
-      const novaMensagemGuru = {
-        autor: "guru",
-        texto: resposta,
-      };
-
-      setMensagens((msgs) => [...msgs, novaMensagemGuru]);
-      setProcessando(false);
-    }, 600); // atraso de 0,6s só pra dar sensação de resposta
-  }
-
-  function handleKeyDown(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleEnviar();
+  function copiarTexto(texto) {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(texto);
+      alert("Comentário copiado. Agora é só colar lá. 😉");
     }
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      {/* Cabeçalho */}
-      <header className="flex items-center gap-2 px-4 py-3 border-b bg-white">
-        <a href="/" className="text-xl mr-2">
-          ←
-        </a>
-        <div>
-          <h1 className="text-base font-semibold text-slate-800">
-            Guru IA
-          </h1>
-          <p className="text-xs text-slate-500">
-            Me conta a situação, eu deixo o papo pronto.
-          </p>
+    <Layout
+      showBack={false}
+      title="Guru IA"
+      subtitle="Peça ajuda para puxar papo, responder mensagens ou comentar foto."
+      activeTab="guru"
+    >
+      {/* Seleção de modo (abas) */}
+      <section className="mb-4">
+        <div className="inline-flex rounded-full border bg-slate-100 p-1 text-xs">
+          <button
+            type="button"
+            onClick={mudarParaChat}
+            className={`px-3 py-1 rounded-full ${
+              modo === "chat"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-500"
+            }`}
+          >
+            Chat de conselhos
+          </button>
+          <button
+            type="button"
+            onClick={mudarParaFoto}
+            className={`px-3 py-1 rounded-full flex items-center gap-1 ${
+              modo === "foto"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-500"
+            }`}
+          >
+            <span>🖼️</span>
+            <span>Comentar foto</span>
+          </button>
         </div>
-      </header>
+      </section>
 
-      {/* Área de mensagens */}
-      <main className="flex-1 px-4 py-3 pb-24 overflow-y-auto">
-        <div className="flex flex-col gap-2">
-          {mensagens.map((msg, index) => {
-            const isGuru = msg.autor === "guru";
-            return (
-              <div
-                key={index}
-                className={`flex ${
-                  isGuru ? "justify-start" : "justify-end"
-                }`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
-                    isGuru
-                      ? "bg-slate-200 text-slate-800 rounded-bl-sm"
-                      : "bg-sky-600 text-white rounded-br-sm"
-                  }`}
-                >
-                  <p className="whitespace-pre-line">{msg.texto}</p>
+      {modo === "chat" ? (
+        /* MODO CHAT DE CONSELHOS (ainda sem IA real) */
+        <section className="flex flex-col gap-3">
+          <div className="rounded-xl bg-white border px-3 py-3 shadow-sm">
+            <p className="text-xs text-slate-500 mb-2">
+              Cole aqui a mensagem da pessoa ou explique a situação. Na versão
+              completa, o Guru IA vai sugerir respostas prontas de acordo com o
+              seu estilo.
+            </p>
+            <textarea
+              className="w-full h-24 text-sm border rounded-lg px-2 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-sky-500 text-slate-800 placeholder:text-slate-400"
+              placeholder="Ex.: Ela disse que odeia gente 'emocionada'. O que eu respondo?"
+              value={textoDuvida}
+              onChange={(e) => setTextoDuvida(e.target.value)}
+            />
+
+            <button
+              type="button"
+              className="mt-2 text-xs px-3 py-1.5 rounded-full bg-slate-300 text-slate-700 font-semibold cursor-not-allowed"
+            >
+              Em breve: gerar resposta com IA
+            </button>
+
+            <p className="mt-1 text-[11px] text-slate-500">
+              Por enquanto esta área é só visual. Quando a IA estiver conectada,
+              esse botão vai gerar respostas prontas para você copiar.
+            </p>
+          </div>
+        </section>
+      ) : (
+        /* MODO COMENTAR FOTO (visual, sem IA por enquanto) */
+        <section className="flex flex-col gap-3">
+          <div className="rounded-xl bg-white border px-3 py-3 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <p className="text-xs font-semibold text-slate-700">
+                  O que comentar na foto?
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  Envie uma foto do feed, story ou print. O PapoPronto vai gerar
+                  comentários específicos para essa imagem.
+                </p>
+              </div>
+              <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-[2px] rounded-full">
+                Recurso PRO · em breve
+              </span>
+            </div>
+
+            {/* Área de upload da foto */}
+            <label className="mt-2 flex flex-col items-center justify-center border border-dashed border-slate-300 rounded-lg px-3 py-4 cursor-pointer hover:border-sky-400 hover:bg-slate-50">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleArquivoChange}
+              />
+              <span className="text-xl mb-1">📷</span>
+              <p className="text-xs text-slate-700">
+                Toque aqui para enviar uma foto
+              </p>
+              <p className="text-[10px] text-slate-400 mt-1">
+                Evite fotos íntimas ou de menores de idade.
+              </p>
+            </label>
+
+            {/* Preview da foto selecionada */}
+            {previewUrl && (
+              <div className="mt-3">
+                <p className="text-[11px] text-slate-500 mb-1">
+                  Pré-visualização da imagem:
+                </p>
+                <div className="rounded-lg overflow-hidden border bg-slate-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={previewUrl}
+                    alt="Pré-visualização"
+                    className="w-full max-h-64 object-cover"
+                  />
                 </div>
               </div>
-            );
-          })}
+            )}
 
-          {processando && (
-            <div className="flex justify-start">
-              <div className="max-w-[60%] rounded-2xl px-3 py-2 text-xs bg-slate-200 text-slate-600 rounded-bl-sm">
-                Digitando...
+            {/* Botão de gerar ideias (demo) */}
+            <button
+              type="button"
+              className="mt-3 text-xs px-3 py-1.5 rounded-full bg-sky-600 text-white font-semibold"
+              onClick={handleGerarIdeiasFake}
+            >
+              Gerar ideias de comentário (demo)
+            </button>
+
+            <p className="mt-1 text-[11px] text-slate-500">
+              Na versão completa, a IA vai analisar a foto (cenário, roupas,
+              detalhes) e sugerir comentários específicos que fogem do padrão
+              “linda” e “gostosa”.
+            </p>
+          </div>
+
+          {/* Lista de comentários de exemplo */}
+          {comentariosExemplo.length > 0 && (
+            <div className="rounded-xl bg-white border px-3 py-3 shadow-sm">
+              <p className="text-xs font-semibold text-slate-700 mb-1">
+                Exemplos de comentários que o PapoPronto pode sugerir:
+              </p>
+              <p className="text-[11px] text-slate-500 mb-2">
+                Aqui estamos mostrando um comportamento simulado. Depois, isso
+                vai ser gerado de verdade, baseado na foto enviada.
+              </p>
+
+              <div className="flex flex-col gap-2">
+                {comentariosExemplo.map((texto, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-lg border px-2 py-2 text-xs text-slate-700 bg-slate-50 flex flex-col gap-1"
+                  >
+                    <p>{texto}</p>
+                    <div>
+                      <button
+                        type="button"
+                        className="text-[11px] px-2 py-1 rounded-full border border-sky-400 text-sky-700"
+                        onClick={() => copiarTexto(texto)}
+                      >
+                        Copiar comentário
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
-        </div>
-      </main>
-
-      {/* Input fixo embaixo */}
-      <form
-        className="fixed bottom-0 left-0 right-0 border-t bg-white px-3 py-2 flex items-center gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleEnviar();
-        }}
-      >
-        <textarea
-          className="flex-1 text-xs border rounded-lg px-2 py-2 resize-none max-h-24 focus:outline-none focus:ring-1 focus:ring-sky-500 text-slate-800 placeholder:text-slate-400 bg-white"
-          placeholder="Cole aqui o print (ou descreva a situação) e eu te ajudo a responder..."
-          rows={1}
-          value={textoUsuario}
-          onChange={(e) => setTextoUsuario(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-        <button
-          type="submit"
-          className="text-xs px-3 py-2 rounded-lg bg-sky-600 text-white font-semibold disabled:opacity-50"
-          disabled={!textoUsuario.trim() || processando}
-        >
-          Enviar
-        </button>
-      </form>
-
-      {/* Menu inferior (escondido por enquanto para não conflitar com o input) */}
-      <nav className="hidden">
-        {/* Mantido apenas se no futuro quisermos unificar rodapé. */}
-      </nav>
-    </div>
+        </section>
+      )}
+    </Layout>
   );
 }
