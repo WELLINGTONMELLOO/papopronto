@@ -1,78 +1,172 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// pages/index.js - Home do PapoPronto
+import { useEffect, useState } from "react";
 
 export default function Home() {
+  const [nomeUsuario, setNomeUsuario] = useState("Guerreiro(a)");
+
+  // Carrega o nome salvo no localStorage, se existir
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      const bruto = localStorage.getItem("papopronto_usuario");
+      if (!bruto) return;
+
+      const usuario = JSON.parse(bruto);
+      if (usuario && typeof usuario.nome === "string" && usuario.nome.trim()) {
+        setNomeUsuario(usuario.nome.trim());
+      }
+    } catch (erro) {
+      console.error("Erro ao carregar dados do usuário:", erro);
+    }
+  }, []);
+
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black`}
-    >
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the index.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      {/* Cabeçalho */}
+      <header className="flex items-center justify-between px-4 py-3 border-b bg-white">
+        <div>
+          <h1 className="text-sm text-slate-500">PapoPronto</h1>
+        </div>
+        <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-600">
+          PP
+        </div>
+      </header>
+
+      {/* Conteúdo principal */}
+      <main className="flex-1 px-4 py-4 pb-20">
+        {/* Saudação */}
+        <section className="mb-4">
+          <p className="text-xl font-semibold text-slate-800">
+            Bom dia, {nomeUsuario}.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+          <p className="text-sm text-slate-500">
+            Qual é o papo de hoje?
+          </p>
+        </section>
+
+        {/* Card destaque do dia */}
+        <section className="mb-4">
+          <div className="rounded-xl bg-sky-900 text-slate-50 p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">⚡</span>
+              <h2 className="text-sm font-semibold uppercase tracking-wide">
+                A boa da sexta-feira
+              </h2>
+            </div>
+            <p className="text-sm text-slate-100 mb-3">
+              3 frases prontas pra usar se for pro bar hoje.
+            </p>
+            <button className="text-xs font-semibold bg-amber-400 text-slate-900 px-3 py-1 rounded-full">
+              Ver dicas agora
+            </button>
+          </div>
+        </section>
+
+        {/* Botão de emergência (link para /emergencia) */}
+        <section className="mb-4">
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">
+            Precisa de ajuda agora?
+          </h3>
           <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/emergencia"
+            className="w-full flex flex-col items-start justify-between rounded-xl border border-sky-300 bg-sky-50 px-4 py-3 shadow-sm"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">🚨</span>
+              <span className="font-semibold text-slate-800">
+                Botão de Emergência
+              </span>
+            </div>
+            <p className="text-xs text-slate-600">
+              Tô no encontro e travei. Me dá um papo pronto agora.
+            </p>
           </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs/pages/getting-started?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+        </section>
+
+        {/* Vibes (com links diretos para as vibes principais) */}
+        <section className="mb-4">
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">
+            Escolha a vibe de hoje
+          </h3>
+
+          <div className="flex flex-col gap-2">
+            <a
+              href="/vibes/amor_boletos"
+              className="flex items-center justify-between rounded-xl bg-white border px-3 py-2 shadow-sm"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <span>🧾</span>
+                  <span className="text-sm font-semibold text-slate-800">
+                    Amor &amp; Boletos (CLT)
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Pra quem tá cansado, mas carente.
+                </p>
+              </div>
+              <span className="text-xs text-slate-400">Ver</span>
+            </a>
+
+            <a
+              href="/vibes/sofrencia"
+              className="flex items-center justify-between rounded-xl bg-white border px-3 py-2 shadow-sm"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <span>🤠</span>
+                  <span className="text-sm font-semibold text-slate-800">
+                    Modo Sofrência (Sertanejo)
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Pra conquistar no ritmo do modão.
+                </p>
+              </div>
+              <span className="text-xs text-slate-400">Ver</span>
+            </a>
+
+            <a
+              href="/vibes/reality"
+              className="flex items-center justify-between rounded-xl bg-white border px-3 py-2 shadow-sm"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <span>🎭</span>
+                  <span className="text-sm font-semibold text-slate-800">
+                    Vibe Reality Show
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Frases dignas de final de BBB.
+                </p>
+              </div>
+              <span className="text-xs text-slate-400">Ver</span>
+            </a>
+          </div>
+        </section>
       </main>
+
+      {/* Menu inferior */}
+      <nav className="fixed bottom-0 left-0 right-0 border-t bg-white px-4 py-2 flex justify-between">
+        <a href="/" className="flex flex-col items-center text-xs text-sky-700">
+          <span>🏠</span>
+          <span>Início</span>
+        </a>
+        <a href="/vibes" className="flex flex-col items-center text-xs text-slate-500">
+          <span>📂</span>
+          <span>Frases</span>
+        </a>
+        <a href="/guru" className="flex flex-col items-center text-xs text-slate-500">
+          <span>🤖</span>
+          <span>Guru IA</span>
+        </a>
+        <a href="/perfil" className="flex flex-col items-center text-xs text-slate-500">
+          <span>👤</span>
+          <span>Perfil</span>
+        </a>
+      </nav>
     </div>
   );
 }
