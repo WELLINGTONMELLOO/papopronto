@@ -1,72 +1,54 @@
 // data/conteudo.js
 
-// Lista de vibes (categorias)
+// Lista de vibes disponíveis no app
 export const vibes = [
   {
     id: "amor_boletos",
     nome: "Amor & Boletos (CLT)",
-    descricao:
-      "Cantadas cansadas porém carentes. Humor de quem enfrenta segunda-feira e ainda acredita no amor.",
+    descricao: "Pra quem tá cansado, mas carente.",
     icone: "🧾",
-    premium: false,
   },
   {
     id: "sofrencia",
     nome: "Modo Sofrência (Sertanejo)",
     descricao: "Pra conquistar no ritmo do modão.",
     icone: "🤠",
-    premium: false,
   },
   {
     id: "reality",
     nome: "Vibe Reality Show",
     descricao: "Frases dignas de final de BBB.",
     icone: "🎭",
-    premium: false,
   },
-  {
-    id: "cria_zap",
-    nome: "Cria do Zap",
-    descricao: "Direto, mandrake e sem enrolação.",
-    icone: "😎",
-    premium: false,
-  },
-  {
-    id: "reconcilia",
-    nome: "Reconcilia Aí",
-    descricao: "Textos pra pedir desculpa sem ser 'volta bb'.",
-    icone: "💔",
-    premium: false,
-  },
+  // VIBE PRO TRAVADA
   {
     id: "psico_pro",
-    nome: "Cantadas Infalíveis (Psico) 🔒",
-    descricao: "Coleção PRO baseada em contexto e psicologia.",
+    nome: "Cantadas Psicológicas PRO",
+    descricao: "Baseadas em contexto, timing e comportamento. Conteúdo exclusivo.",
     icone: "🧠",
-    premium: true,
+    pro: true, // <- marca que é vibe PRO
   },
 ];
 
-// Frases organizadas por vibe (id da vibe)
+// Frases organizadas por vibe (MVP)
 export const frasesPorVibe = {
-  sofrencia: [
-    "Não sou o Gusttavo Lima, mas queria ser o Embaixador do seu coração, bebê.",
-    "Se meu coração fosse um show, você seria ingresso esgotado.",
-  ],
   amor_boletos: [
-    "Gata, você não é 13º salário, mas cheguei no fim do ano só esperando por você.",
-    "Não sou o seu holerite, mas queria ter um pouco da sua atenção todo mês.",
+    "Gata, você não é 13º salário, mas eu passei o ano inteiro esperando por você.",
+    "Se relacionamento fosse igual boleto, eu aceitava até pagar adiantado só pra não te perder.",
+    "Você não é minha conta de luz, mas clareou meu mês inteiro.",
+  ],
+  sofrencia: [
+    "Não sou o Gusttavo Lima, mas queria ser o embaixador do seu coração, bebê.",
+    "Se a gente fosse música sertaneja, certeza que ia tocar em todos os botecos da cidade.",
+    "Tô igual moda de viola: antigo, intenso e difícil de tirar da cabeça.",
   ],
   reality: [
-    "Se a vida fosse um reality, você seria finalista com 99% dos meus votos.",
+    "Se o Brasil fosse um reality, você já tava na final com 99% dos meus votos.",
+    "A gente podia resolver isso como no reality: eu, você e um confessionário particular.",
+    "Entre você e o prêmio de 1 milhão, ainda tô em dúvida... mas acho que escolho você.",
   ],
-  cria_zap: [
-    "Sem muita curva pra não capotar: qual é a fita de hoje? Brota?",
-  ],
-  reconcilia: [
-    "Fiz besteira, eu sei. Não vou te encher de texto, só quero uma chance de te ouvir e consertar olhando no teu olho.",
-  ],
-  psico_pro: [
-    "Se eu sumir por uns dias, é só estratégia pra ver se você sente minha falta. Mas confesso que sou péssimo em fingir que não ligo.",
-  ],
+
+  // psico_pro propositalmente SEM frases acessíveis nesse momento
+  // para ficar como conteúdo travado / em breve.
+  psico_pro: [],
 };

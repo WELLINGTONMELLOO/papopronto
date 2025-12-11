@@ -13,16 +13,23 @@ export default function FrasesPorVibePage() {
   // Carregar frases da vibe atual
   const frases = id ? frasesPorVibe[id] || [] : [];
 
-  // Descobrir o nome bonitinho da vibe
+  // Descobrir a vibe atual
   const vibeAtual = id ? vibes.find((v) => v.id === id) : null;
-  const tituloVibe = vibeAtual ? vibeAtual.nome : id || "";
+  const tituloVibe = vibeAtual ? vibeAtual.nome : id || "Frases";
   const subtituloVibe = vibeAtual
     ? vibeAtual.descricao
     : "Toque para copiar, mandar no zap ou favoritar.";
 
+  const isPro = !!(vibeAtual && vibeAtual.pro);
+
   // Carregar favoritos do localStorage quando a página souber o id
   useEffect(() => {
     if (!id || typeof window === "undefined") return;
+    if (isPro) {
+      // não precisa carregar favoritos para vibe PRO travada
+      setFavoritos([]);
+      return;
+    }
 
     try {
       const bruto = localStorage.getItem("papopronto_favoritos");
@@ -37,14 +44,14 @@ export default function FrasesPorVibePage() {
       console.error("Erro ao carregar favoritos:", erro);
       setFavoritos([]);
     }
-  }, [id]);
+  }, [id, isPro]);
 
   function isFavorita(frase) {
     return favoritos.includes(frase);
   }
 
   function toggleFavorito(frase) {
-    if (!id || typeof window === "undefined") return;
+    if (!id || typeof window === "undefined" || isPro) return;
 
     setFavoritos((favoritosAtuais) => {
       let novosFavoritos;
@@ -71,7 +78,7 @@ export default function FrasesPorVibePage() {
     });
   }
 
-  // Enquanto o id ainda não chegou (Next carrega query async)
+  // Enquanto o id ainda não chegou
   if (!id) {
     return (
       <Layout
@@ -88,6 +95,46 @@ export default function FrasesPorVibePage() {
     );
   }
 
+  // Caso seja uma vibe PRO travada
+  if (isPro) {
+    return (
+      <Layout
+        showBack={true}
+        backHref="/vibes"
+        title={tituloVibe}
+        subtitle={subtituloVibe}
+        activeTab="vibes"
+      >
+        <div className="rounded-xl bg-amber-50 border border-amber-300 px-3 py-3 shadow-sm">
+          <p className="text-sm font-semibold text-amber-800 mb-1">
+            Conteúdo PRO em breve
+          </p>
+          <p className="text-xs text-amber-900 mb-2">
+            Aqui vão ficar as cantadas mais afiadas, baseadas em contexto,
+            psicologia e timing de conversa. Essa vibe será parte da versão
+            PRO do PapoPronto.
+          </p>
+          <p className="text-[11px] text-amber-900 mb-3">
+            Por enquanto você pode usar todas as outras vibes liberadas enquanto
+            a casa prepara esse modo turbo.
+          </p>
+          <button
+            type="button"
+            className="text-[11px] px-3 py-1.5 rounded-full bg-amber-600 text-white font-semibold"
+            onClick={() => {
+              alert(
+                "Quando a versão PRO estiver pronta, essa vibe vai ser uma das primeiras a ser liberada. 😉"
+              );
+            }}
+          >
+            Quero saber quando lançar
+          </button>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Vibes normais (conteúdo liberado)
   return (
     <Layout
       showBack={true}
