@@ -1,32 +1,6 @@
 // pages/emergencia.js
 import Layout from "../components/Layout";
-
-const blocos = [
-  {
-    titulo: "Encontro travado",
-    descricao: "Quando bate o silêncio na mesa.",
-    frases: [
-      "Tô aqui tentando fazer uma pergunta inteligente, mas minha mente só tá pensando em como você tá bonito(a) hoje.",
-      "Você é mais do time série, filme ou ficar falando besteira até tarde?",
-    ],
-  },
-  {
-    titulo: "Whats travou",
-    descricao: "Quando o papo morre do nada.",
-    frases: [
-      "Sumiu ou a gente já pode marcar o casamento e eu não fiquei sabendo? 😂",
-      "Vou fingir que não notei seu sumiço… mas só dessa vez.",
-    ],
-  },
-  {
-    titulo: "Resposta seca",
-    descricao: "Quando só vem 'kk', 'blz', 'uai'.",
-    frases: [
-      "Senti um 'tô sem assunto' aí… quer que eu puxe um tema aleatório ou a gente fala de coisa séria?",
-      "Tô em dúvida se você tá com sono ou só me testando pra ver se eu desisto 😂",
-    ],
-  },
-];
+import { blocosEmergencia } from "../data/conteudo";
 
 export default function EmergenciaPage() {
   return (
@@ -38,9 +12,9 @@ export default function EmergenciaPage() {
       activeTab="home"
     >
       <div className="flex flex-col gap-4">
-        {blocos.map((bloco, i) => (
+        {blocosEmergencia.map((bloco) => (
           <div
-            key={i}
+            key={bloco.id}
             className="rounded-xl bg-white border px-3 py-3 shadow-sm"
           >
             <div className="mb-2">
@@ -63,7 +37,7 @@ export default function EmergenciaPage() {
                       className="text-[11px] px-2 py-1 rounded-full border border-sky-400 text-sky-700"
                       onClick={() => {
                         navigator.clipboard.writeText(frase);
-                        alert("Papo copiado. Vai na fé 😉");
+                        alert("Papo copiado. Vai na fé.");
                       }}
                     >
                       Copiar
