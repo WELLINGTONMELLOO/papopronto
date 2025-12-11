@@ -5,6 +5,8 @@ import Layout from "../components/Layout";
 export default function GuruPage() {
   const [modo, setModo] = useState("chat"); // "chat" | "foto"
   const [textoDuvida, setTextoDuvida] = useState("");
+  const [respostasDemo, setRespostasDemo] = useState([]);
+
   const [arquivo, setArquivo] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [comentariosExemplo, setComentariosExemplo] = useState([]);
@@ -17,6 +19,81 @@ export default function GuruPage() {
     setModo("foto");
   }
 
+  function copiarTexto(texto) {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(texto);
+      alert("Texto copiado. Agora é só colar lá. 😉");
+    }
+  }
+
+  // ----- MODO CHAT: gerar respostas demo sem IA -----
+  function handleGerarRespostasDemo() {
+    const texto = textoDuvida.trim();
+
+    if (!texto) {
+      alert(
+        "Escreve rapidinho o que aconteceu ou cola a mensagem da pessoa, que eu te dou umas ideias de resposta."
+      );
+      return;
+    }
+
+    // Regras bem simples só para deixar mais “vivo”
+    const isEla = /ela|menina|garota|mulher/i.test(texto);
+    const isEle = /ele|cara|rapaz|homem/i.test(texto);
+    const isSeco = /\bkk\b|blz|ok|tá\b|ta\b|td bem/i.test(texto);
+    const isSumico = /sumiu|sumida|sumido|visualizou e não respondeu|não responde/i.test(
+      texto
+    );
+    const isEmocionado = /emocionad[oa]/i.test(texto);
+
+    const genero = isEla ? "ela" : isEle ? "ele" : "pessoa";
+
+    const lista = [];
+
+    if (isSeco) {
+      lista.push(
+        "Você pode responder algo leve tipo: \"Tô em dúvida se você tá sem assunto ou só me testando pra ver se eu desisto 😏\"."
+      );
+      lista.push(
+        "Outra opção é: \"Vou considerar esse 'kk' como um 'continua falando que tô gostando'.\""
+      );
+    }
+
+    if (isSumico) {
+      lista.push(
+        `Algo assim funciona bem: \"Vou fingir que não notei seu sumiço... mas só dessa vez. E aí, ${genero}, como você tá?\"`
+      );
+      lista.push(
+        "Ou mais direto: \"Se eu te mandar um 'sumido(a)?', você responde ou some de novo?\""
+      );
+    }
+
+    if (isEmocionado) {
+      lista.push(
+        "Você pode brincar: \"Calma, então vou cancelar o carro de som que eu ia mandar pra sua casa 😂\"."
+      );
+      lista.push(
+        "Ou algo mais suave: \"Relaxa, também não curto gente grudada demais. Bora no equilíbrio: nem sumir, nem morar no WhatsApp.\""
+      );
+    }
+
+    if (!lista.length) {
+      // Respostas genéricas quando não encaixa nas “regrinhas”
+      lista.push(
+        "Você pode responder algo que puxe mais conversa, tipo: \"Achei interessante o que você falou. Me conta mais sobre isso.\""
+      );
+      lista.push(
+        "Outra opção é: \"Tô gostando da nossa conversa, mas quero te conhecer de verdade. O que você curte fazer no tempo livre?\""
+      );
+      lista.push(
+        "Se quiser algo mais ousado: \"Se eu continuar falando assim, corro risco de você marcar um café comigo?\""
+      );
+    }
+
+    setRespostasDemo(lista);
+  }
+
+  // ----- MODO FOTO: apenas visual/demo -----
   function handleArquivoChange(event) {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -47,13 +124,6 @@ export default function GuruPage() {
     );
   }
 
-  function copiarTexto(texto) {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(texto);
-      alert("Comentário copiado. Agora é só colar lá. 😉");
-    }
-  }
-
   return (
     <Layout
       showBack={false}
@@ -63,7 +133,7 @@ export default function GuruPage() {
     >
       {/* Seleção de modo (abas) */}
       <section className="mb-4">
-        <div className="inline-flex rounded-full border bg-slate-100 p-1 text-xs">
+        <div className="inline-flex rounded-full border bg-slate-100 border-slate-200 p-1 text-xs">
           <button
             type="button"
             onClick={mudarParaChat}
@@ -91,16 +161,15 @@ export default function GuruPage() {
       </section>
 
       {modo === "chat" ? (
-        /* MODO CHAT DE CONSELHOS (ainda sem IA real) */
+        /* MODO CHAT DE CONSELHOS (demo funcional) */
         <section className="flex flex-col gap-3">
-          <div className="rounded-xl bg-white border px-3 py-3 shadow-sm">
+          <div className="rounded-xl bg-white border border-slate-200 px-3 py-3 shadow-sm">
             <p className="text-xs text-slate-500 mb-2">
-              Cole aqui a mensagem da pessoa ou explique a situação. Na versão
-              completa, o Guru IA vai sugerir respostas prontas de acordo com o
-              seu estilo.
+              Cole aqui a mensagem da pessoa ou explique a situação. O Guru vai
+              te dar ideias de resposta com tom leve e brasileiro.
             </p>
             <textarea
-              className="w-full h-24 text-sm border rounded-lg px-2 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-sky-500 text-slate-800 placeholder:text-slate-400"
+              className="w-full h-24 text-sm border border-slate-300 rounded-lg px-2 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-sky-500 text-slate-800 bg-white placeholder:text-slate-400"
               placeholder="Ex.: Ela disse que odeia gente 'emocionada'. O que eu respondo?"
               value={textoDuvida}
               onChange={(e) => setTextoDuvida(e.target.value)}
@@ -108,29 +177,62 @@ export default function GuruPage() {
 
             <button
               type="button"
-              className="mt-2 text-xs px-3 py-1.5 rounded-full bg-slate-300 text-slate-700 font-semibold cursor-not-allowed"
+              className="mt-2 text-xs px-3 py-1.5 rounded-full bg-sky-600 text-white font-semibold"
+              onClick={handleGerarRespostasDemo}
             >
-              Em breve: gerar resposta com IA
+              Gerar ideias de resposta (demo)
             </button>
 
             <p className="mt-1 text-[11px] text-slate-500">
-              Por enquanto esta área é só visual. Quando a IA estiver conectada,
-              esse botão vai gerar respostas prontas para você copiar.
+              Na versão com IA, as respostas vão considerar seu estilo e o
+              contexto da conversa em tempo real.
             </p>
           </div>
+
+          {respostasDemo.length > 0 && (
+            <div className="rounded-xl bg-white border border-slate-200 px-3 py-3 shadow-sm">
+              <p className="text-xs font-semibold text-slate-700 mb-1">
+                Sugestões de resposta:
+              </p>
+              <p className="text-[11px] text-slate-500 mb-2">
+                Ajuste para ficar com a sua cara antes de enviar. O objetivo é
+                te tirar do “branco” na hora de responder.
+              </p>
+
+              <div className="flex flex-col gap-2">
+                {respostasDemo.map((texto, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-lg border border-slate-200 px-2 py-2 text-xs text-slate-700 bg-slate-50 flex flex-col gap-1"
+                  >
+                    <p>{texto}</p>
+                    <div>
+                      <button
+                        type="button"
+                        className="text-[11px] px-2 py-1 rounded-full border border-sky-400 text-sky-700"
+                        onClick={() => copiarTexto(texto)}
+                      >
+                        Copiar resposta
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
       ) : (
         /* MODO COMENTAR FOTO (visual, sem IA por enquanto) */
         <section className="flex flex-col gap-3">
-          <div className="rounded-xl bg-white border px-3 py-3 shadow-sm">
+          <div className="rounded-xl bg-white border border-slate-200 px-3 py-3 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <div>
                 <p className="text-xs font-semibold text-slate-700">
                   O que comentar na foto?
                 </p>
                 <p className="text-[11px] text-slate-500">
-                  Envie uma foto do feed, story ou print. O PapoPronto vai gerar
-                  comentários específicos para essa imagem.
+                  Envie uma foto do feed, story ou print. O PapoPronto vai
+                  gerar comentários específicos para essa imagem.
                 </p>
               </div>
               <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-[2px] rounded-full">
@@ -161,7 +263,7 @@ export default function GuruPage() {
                 <p className="text-[11px] text-slate-500 mb-1">
                   Pré-visualização da imagem:
                 </p>
-                <div className="rounded-lg overflow-hidden border bg-slate-100">
+                <div className="rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={previewUrl}
@@ -190,7 +292,7 @@ export default function GuruPage() {
 
           {/* Lista de comentários de exemplo */}
           {comentariosExemplo.length > 0 && (
-            <div className="rounded-xl bg-white border px-3 py-3 shadow-sm">
+            <div className="rounded-xl bg-white border border-slate-200 px-3 py-3 shadow-sm">
               <p className="text-xs font-semibold text-slate-700 mb-1">
                 Exemplos de comentários que o PapoPronto pode sugerir:
               </p>
@@ -203,7 +305,7 @@ export default function GuruPage() {
                 {comentariosExemplo.map((texto, idx) => (
                   <div
                     key={idx}
-                    className="rounded-lg border px-2 py-2 text-xs text-slate-700 bg-slate-50 flex flex-col gap-1"
+                    className="rounded-lg border border-slate-200 px-2 py-2 text-xs text-slate-700 bg-slate-50 flex flex-col gap-1"
                   >
                     <p>{texto}</p>
                     <div>
