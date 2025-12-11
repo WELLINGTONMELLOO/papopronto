@@ -5,21 +5,48 @@ import { destaquesPorDia } from "../data/conteudo";
 
 export default function Home() {
   const [nomeUsuario, setNomeUsuario] = useState("Guerreiro(a)");
+  const [totalFavoritos, setTotalFavoritos] = useState(0);
+  const [favoritosPreview, setFavoritosPreview] = useState([]);
 
-  // Carrega o nome salvo no localStorage, se existir
+  // Carrega o nome salvo e os favoritos no localStorage, se existirem
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     try {
-      const bruto = localStorage.getItem("papopronto_usuario");
-      if (!bruto) return;
+      // Carregar nome do usuário
+      const brutoUsuario = localStorage.getItem("papopronto_usuario");
+      if (brutoUsuario) {
+        const usuario = JSON.parse(brutoUsuario);
+        if (usuario && typeof usuario.nome === "string" && usuario.nome.trim()) {
+          setNomeUsuario(usuario.nome.trim());
+        }
+      }
 
-      const usuario = JSON.parse(bruto);
-      if (usuario && typeof usuario.nome === "string" && usuario.nome.trim()) {
-        setNomeUsuario(usuario.nome.trim());
+      // Carregar favoritos
+      const brutoFav = localStorage.getItem("papopronto_favoritos");
+      if (brutoFav) {
+        const dadosFav = JSON.parse(brutoFav); // { vibeId: [frases...] }
+        const listas = Object.values(dadosFav).filter(Array.isArray);
+
+        let total = 0;
+        const todasAsFrases = [];
+
+        listas.forEach((lista) => {
+          total += lista.length;
+          todasAsFrases.push(...lista);
+        });
+
+        setTotalFavoritos(total);
+        // Pega até 3 exemplos para mostrar na Home
+        setFavoritosPreview(todasAsFrases.slice(0, 3));
+      } else {
+        setTotalFavoritos(0);
+        setFavoritosPreview([]);
       }
     } catch (erro) {
-      console.error("Erro ao carregar dados do usuário:", erro);
+      console.error("Erro ao carregar dados na Home:", erro);
+      setTotalFavoritos(0);
+      setFavoritosPreview([]);
     }
   }, []);
 
@@ -52,6 +79,43 @@ export default function Home() {
           </button>
         </div>
       </section>
+
+      {/* Minhas mensagens favoritas (mostra só se tiver pelo menos 1) */}
+      {totalFavoritos > 0 && (
+        <section className="mb-4">
+          <div className="rounded-xl bg-white border px-3 py-3 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <p className="text-xs font-semibold text-slate-700">
+                  Minhas mensagens favoritas
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  Você já tem{" "}
+                  <span className="font-semibold">{totalFavoritos}</span>{" "}
+                  frases salvas.
+                </p>
+              </div>
+              <a
+                href="/perfil"
+                className="text-[11px] text-sky-700 font-semibold underline"
+              >
+                Ver todas
+              </a>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {favoritosPreview.map((frase, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-lg border px-2 py-2 text-xs text-slate-700 bg-slate-50"
+                >
+                  {frase}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Botão de emergência (link para /emergencia) */}
       <section className="mb-4">
