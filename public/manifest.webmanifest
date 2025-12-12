@@ -3,6 +3,7 @@
   "short_name": "PapoPronto",
   "description": "Seu conselheiro amoroso com frases prontas, vibes brasileiras e um Guru IA para destravar qualquer conversa.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#020617",
