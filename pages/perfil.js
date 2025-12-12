@@ -4,189 +4,240 @@ import Layout from "../components/Layout";
 import { vibes } from "../data/conteudo";
 
 export default function PerfilPage() {
+  const [nome, setNome] = useState("");
+  const [nomeOriginal, setNomeOriginal] = useState("");
   const [favoritosPorVibe, setFavoritosPorVibe] = useState({});
-  const [nomeUsuario, setNomeUsuario] = useState("");
-  const [nomeTemp, setNomeTemp] = useState("");
+  const [totalFavoritos, setTotalFavoritos] = useState(0);
+  const [salvandoNome, setSalvandoNome] = useState(false);
 
+  // Carrega nome e favoritos do localStorage
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     try {
-      // Carregar favoritos
-      const brutoFav = localStorage.getItem("papopronto_favoritos");
-      const dadosFav = brutoFav ? JSON.parse(brutoFav) : {};
-      setFavoritosPorVibe(dadosFav);
-
-      // Carregar dados do usuário (nome)
+      // Nome do usuário
       const brutoUsuario = localStorage.getItem("papopronto_usuario");
       if (brutoUsuario) {
         const usuario = JSON.parse(brutoUsuario);
-        if (usuario && typeof usuario.nome === "string" && usuario.nome.trim()) {
-          setNomeUsuario(usuario.nome.trim());
-          setNomeTemp(usuario.nome.trim());
+        if (usuario && typeof usuario.nome === "string") {
+          setNome(usuario.nome);
+          setNomeOriginal(usuario.nome);
         }
+      } else {
+        setNome("");
+        setNomeOriginal("");
+      }
+
+      // Favoritos
+      const brutoFav = localStorage.getItem("papopronto_favoritos");
+      if (brutoFav) {
+        const dadosFav = JSON.parse(brutoFav); // { vibeId: [frases...] }
+        setFavoritosPorVibe(dadosFav);
+
+        const total = Object.values(dadosFav).reduce((acc, valor) => {
+          if (Array.isArray(valor)) {
+            return acc + valor.length;
+          }
+          return acc;
+        }, 0);
+
+        setTotalFavoritos(total);
+      } else {
+        setFavoritosPorVibe({});
+        setTotalFavoritos(0);
       }
     } catch (erro) {
-      console.error("Erro ao carregar dados do PapoPronto:", erro);
+      console.error("Erro ao carregar dados do perfil:", erro);
       setFavoritosPorVibe({});
+      setTotalFavoritos(0);
     }
   }, []);
 
-  const totalFavoritos = Object.values(favoritosPorVibe).reduce(
-    (acc, valor) => {
-      if (Array.isArray(valor)) {
-        return acc + valor.length;
-      }
-      return acc;
-    },
-    0
-  );
-
-  // Mapa id -> nome da vibe, para exibir bonito
-  const mapaVibes = vibes.reduce((acc, vibe) => {
-    acc[vibe.id] = vibe.nome;
-    return acc;
-  }, {});
-
-  const idsComFavoritos = Object.keys(favoritosPorVibe).filter((id) => {
-    const lista = favoritosPorVibe[id];
-    return Array.isArray(lista) && lista.length > 0;
-  });
-
   function salvarNome() {
-    if (typeof window === "undefined") return;
-
-    const nomeLimpo = nomeTemp.trim();
+    const nomeLimpo = nome.trim();
     if (!nomeLimpo) {
       alert("Digite um nome antes de salvar.");
       return;
     }
 
-    setNomeUsuario(nomeLimpo);
+    try {
+      setSalvandoNome(true);
+      const objeto = { nome: nomeLimpo };
+      localStorage.setItem("papopronto_usuario", JSON.stringify(objeto));
+      setNomeOriginal(nomeLimpo);
+      alert("Nome atualizado com sucesso.");
+    } catch (erro) {
+      console.error("Erro ao salvar nome:", erro);
+      alert("Não consegui salvar o nome. Tente novamente.");
+    } finally {
+      setSalvandoNome(false);
+    }
+  }
+
+  function limparFavoritos() {
+    if (!totalFavoritos) {
+      alert("Você ainda não possui mensagens favoritas.");
+      return;
+    }
+
+    const confirmar = window.confirm(
+      "Tem certeza que deseja apagar todas as mensagens favoritas? Essa ação não pode ser desfeita."
+    );
+
+    if (!confirmar) return;
 
     try {
-      const dados = { nome: nomeLimpo };
-      localStorage.setItem("papopronto_usuario", JSON.stringify(dados));
-      alert("Nome atualizado com sucesso!");
+      localStorage.removeItem("papopronto_favoritos");
+      setFavoritosPorVibe({});
+      setTotalFavoritos(0);
+      alert("Favoritos apagados com sucesso.");
     } catch (erro) {
-      console.error("Erro ao salvar nome do usuário:", erro);
-      alert("Não foi possível salvar o nome. Tente novamente.");
+      console.error("Erro ao limpar favoritos:", erro);
+      alert("Não consegui apagar os favoritos. Tente novamente.");
     }
+  }
+
+  // Ajuda a pegar o nome da vibe
+  function nomeDaVibe(id) {
+    const vibe = vibes.find((v) => v.id === id);
+    return vibe ? vibe.nome : id;
   }
 
   return (
     <Layout
-      showBack={true}
-      backHref="/"
-      title="Perfil & Caderninho"
-      subtitle="Ajuste seu nome e veja suas frases favoritas."
+      showBack={false}
+      title="Seu perfil"
+      subtitle="Ajuste seu nome e veja suas mensagens favoritas."
       activeTab="perfil"
     >
-      {/* Configuração de nome */}
+      {/* Bloco de nome / identidade */}
       <section className="mb-4">
-        <div className="rounded-xl bg-white border px-3 py-3 shadow-sm">
-          <p className="text-xs text-slate-500 mb-1">
-            Seu nome no PapoPronto
+        <div className="rounded-xl bg-white border border-slate-200 px-3 py-3 shadow-sm">
+          <p className="text-xs font-semibold text-slate-700 mb-2">
+            Como você quer aparecer no app?
           </p>
           <p className="text-[11px] text-slate-500 mb-2">
-            Esse é o nome que aparece na saudação da tela inicial.
+            Esse nome é usado na saudação da Home (ex.: &quot;Bom dia,
+            {nomeOriginal ? ` ${nomeOriginal}` : " Guerreiro(a)"}&quot;).
           </p>
 
-          <div className="flex flex-col gap-2">
-            <input
-              type="text"
-              className="text-sm border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-sky-500 text-slate-800 placeholder:text-slate-400 bg-white"
-              placeholder="Digite como você quer ser chamado(a)"
-              value={nomeTemp}
-              onChange={(e) => setNomeTemp(e.target.value)}
-            />
-            <button
-              onClick={salvarNome}
-              className="self-start text-xs px-3 py-1.5 rounded-full bg-sky-600 text-white font-semibold"
-            >
-              Salvar nome
-            </button>
-            {nomeUsuario && (
-              <p className="text-[11px] text-slate-500">
-                Saudações atuais:{" "}
-                <span className="font-semibold">{nomeUsuario}</span>
-              </p>
-            )}
-          </div>
+          <input
+            type="text"
+            className="w-full text-sm border border-slate-300 rounded-lg px-2 py-2 mb-2 focus:outline-none focus:ring-1 focus:ring-sky-500 text-slate-800"
+            placeholder="Digite seu nome ou apelido"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+          />
+
+          <button
+            type="button"
+            onClick={salvarNome}
+            disabled={salvandoNome}
+            className="text-xs px-3 py-1.5 rounded-full bg-sky-600 text-white font-semibold disabled:opacity-60"
+          >
+            {salvandoNome ? "Salvando..." : "Salvar nome"}
+          </button>
         </div>
       </section>
 
-      {/* Resumo rápido de favoritos */}
+      {/* Resumo dos favoritos */}
       <section className="mb-4">
-        <div className="rounded-xl bg-white border px-3 py-3 shadow-sm">
-          <p className="text-xs text-slate-500 mb-1">
-            Resumo do PapoPronto
-          </p>
-          <p className="text-sm text-slate-700">
-            Você tem{" "}
-            <span className="font-semibold">{totalFavoritos} frases</span>{" "}
-            salvas nos favoritos.
-          </p>
-          <p className="text-[11px] text-slate-500 mt-1">
-            Use o coração ❤️ ao lado das frases nas vibes para salvar as que
-            você mais gostou. Elas aparecem aqui, organizadas por vibe.
-          </p>
+        <div className="rounded-xl bg-white border border-slate-200 px-3 py-3 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <p className="text-xs font-semibold text-slate-700">
+                Minhas mensagens favoritas
+              </p>
+              <p className="text-[11px] text-slate-500">
+                Você tem{" "}
+                <span className="font-semibold">{totalFavoritos}</span>{" "}
+                mensagens salvas.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={limparFavoritos}
+              className="text-[11px] px-2 py-1 rounded-full border border-rose-300 text-rose-700"
+            >
+              Limpar favoritos
+            </button>
+          </div>
+
+          {totalFavoritos === 0 ? (
+            <p className="text-[11px] text-slate-500">
+              Você ainda não marcou nenhuma mensagem como favorita. Vá em
+              &quot;Frases&quot; e toque no coração ao lado das mensagens que
+              quiser guardar.
+            </p>
+          ) : (
+            <p className="text-[11px] text-slate-500">
+              Para ver um resumo rápido, confira abaixo suas favoritas
+              organizadas por vibe.
+            </p>
+          )}
         </div>
       </section>
 
       {/* Lista de favoritos por vibe */}
-      <section>
-        <h2 className="text-sm font-semibold text-slate-700 mb-2">
-          Favoritos por vibe
-        </h2>
+      {totalFavoritos > 0 && (
+        <section className="mb-4">
+          <div className="flex flex-col gap-3">
+            {Object.entries(favoritosPorVibe).map(([vibeId, lista]) => {
+              if (!Array.isArray(lista) || !lista.length) return null;
 
-        {idsComFavoritos.length === 0 && (
-          <p className="text-xs text-slate-500">
-            Você ainda não favoritou nenhuma frase. Vá em uma vibe, toque no
-            coração ❤️ ao lado de uma frase e ela vai aparecer aqui.
-          </p>
-        )}
-
-        <div className="flex flex-col gap-4">
-          {idsComFavoritos.map((id) => {
-            const lista = favoritosPorVibe[id] || [];
-            const nomeVibe = mapaVibes[id] || id;
-
-            return (
-              <div
-                key={id}
-                className="rounded-xl bg-white border px-3 py-3 shadow-sm"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-800">
-                      {nomeVibe}
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      {lista.length} favorito(s)
-                    </p>
-                  </div>
-                  <a
-                    href={`/vibes/${id}`}
-                    className="text-[11px] text-sky-600 underline"
-                  >
-                    Ver vibe
-                  </a>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  {lista.map((frase, index) => (
-                    <div
-                      key={index}
-                      className="rounded-lg border px-2 py-2 text-xs text-slate-700 bg-slate-50"
-                    >
-                      {frase}
+              return (
+                <div
+                  key={vibeId}
+                  className="rounded-xl bg-white border border-slate-200 px-3 py-3 shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className="text-xs font-semibold text-slate-700">
+                        {nomeDaVibe(vibeId)}
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        {lista.length} mensagem(ns) favorita(s) nessa vibe.
+                      </p>
                     </div>
-                  ))}
+                    <a
+                      href={`/vibes/${vibeId}`}
+                      className="text-[11px] text-sky-700 font-semibold underline"
+                    >
+                      Ver vibe
+                    </a>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    {lista.map((frase, idx) => (
+                      <div
+                        key={idx}
+                        className="rounded-lg border border-slate-200 px-2 py-2 text-xs text-slate-700 bg-slate-50"
+                      >
+                        {frase}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Área informativa sobre PRO futuramente (placeholder) */}
+      <section className="mb-6">
+        <div className="rounded-xl bg-slate-900 text-slate-50 px-3 py-3 shadow-sm">
+          <p className="text-xs font-semibold mb-1">
+            Em breve: PapoPronto PRO
+          </p>
+          <p className="text-[11px] text-slate-200 mb-1">
+            Acesso ilimitado ao Guru IA, modo &quot;Comentar foto&quot; com
+            análise de imagem e novas vibes exclusivas.
+          </p>
+          <p className="text-[11px] text-slate-300">
+            Assim que o plano PRO estiver disponível, você vai conseguir
+            gerenciar tudo por aqui.
+          </p>
         </div>
       </section>
     </Layout>
