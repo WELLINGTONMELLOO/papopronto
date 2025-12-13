@@ -1,205 +1,217 @@
-// pages/index.js - Home do PapoPronto
+// pages/index.js
 import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
-import { destaquesPorDia } from "../data/conteudo";
+import { supabase } from "../lib/supabaseClient";
 
-export default function Home() {
-  const [nomeUsuario, setNomeUsuario] = useState("Guerreiro(a)");
-  const [totalFavoritos, setTotalFavoritos] = useState(0);
-  const [favoritosPreview, setFavoritosPreview] = useState([]);
+function getSaudacaoPorHorario() {
+  const agora = new Date();
+  const hora = agora.getHours();
 
-  // Carrega o nome salvo e os favoritos no localStorage, se existirem
+  if (hora < 5) return "Boa noite";
+  if (hora < 12) return "Bom dia";
+  if (hora < 18) return "Boa tarde";
+  return "Boa noite";
+}
+
+function getTituloDestaqueDoDia() {
+  const dias = [
+    "domingo",
+    "segunda-feira",
+    "terça-feira",
+    "quarta-feira",
+    "quinta-feira",
+    "sexta-feira",
+    "sábado",
+  ];
+  const hoje = new Date().getDay(); // 0 = domingo, 6 = sábado
+  const nomeDia = dias[hoje];
+
+  return `A boa de ${nomeDia}`;
+}
+
+const vibesResumo = [
+  {
+    id: "amor-boletos",
+    titulo: "Amor & Boletos",
+    descricao: "Piadas de CLT, cansaço e boletos.",
+  },
+  {
+    id: "modo-sofrencia",
+    titulo: "Modo Sofrência",
+    descricao: "Cantadas sertanejas e de modão.",
+  },
+  {
+    id: "vibe-reality",
+    titulo: "Vibe Reality Show",
+    descricao: "Frases com clima de BBB e Fazenda.",
+  },
+  {
+    id: "cria",
+    titulo: "Aquele Pique (Cria)",
+    descricao: "Papo reto, sem curva pra capotar.",
+  },
+];
+
+export default function HomePage() {
+  const [user, setUser] = useState(null);
+  const [carregandoUser, setCarregandoUser] = useState(true);
+
+  const saudacao = getSaudacaoPorHorario();
+  const tituloDestaque = getTituloDestaqueDoDia();
+
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    let ativo = true;
 
-    try {
-      // Carregar nome do usuário
-      const brutoUsuario = localStorage.getItem("papopronto_usuario");
-      if (brutoUsuario) {
-        const usuario = JSON.parse(brutoUsuario);
-        if (usuario && typeof usuario.nome === "string" && usuario.nome.trim()) {
-          setNomeUsuario(usuario.nome.trim());
-        }
-      }
+    async function carregarUsuario() {
+      const { data, error } = await supabase.auth.getUser();
+      if (!ativo) return;
 
-      // Carregar favoritos
-      const brutoFav = localStorage.getItem("papopronto_favoritos");
-      if (brutoFav) {
-        const dadosFav = JSON.parse(brutoFav); // { vibeId: [frases...] }
-        const listas = Object.values(dadosFav).filter(Array.isArray);
-
-        let total = 0;
-        const todasAsFrases = [];
-
-        listas.forEach((lista) => {
-          total += lista.length;
-          todasAsFrases.push(...lista);
-        });
-
-        setTotalFavoritos(total);
-        // Pega até 3 exemplos para mostrar na Home
-        setFavoritosPreview(todasAsFrases.slice(0, 3));
+      if (error) {
+        console.error("Erro ao buscar usuário:", error);
+        setUser(null);
       } else {
-        setTotalFavoritos(0);
-        setFavoritosPreview([]);
+        setUser(data?.user ?? null);
       }
-    } catch (erro) {
-      console.error("Erro ao carregar dados na Home:", erro);
-      setTotalFavoritos(0);
-      setFavoritosPreview([]);
+      setCarregandoUser(false);
     }
+
+    carregarUsuario();
+
+    return () => {
+      ativo = false;
+    };
   }, []);
 
-  // Define destaque do dia com base no dia da semana
-  const hoje = new Date();
-  const indiceDia = hoje.getDay(); // 0 = Domingo ... 6 = Sábado
-  const destaque =
-    destaquesPorDia[indiceDia] || destaquesPorDia[0]; // fallback pro domingo
+  const nomeUsuario =
+    user?.user_metadata?.nome ||
+    (user?.email ? user.email.split("@")[0] : "você");
 
   return (
-    <Layout
-      title={`Bom dia, ${nomeUsuario}.`}
-      subtitle="Qual é o papo de hoje?"
-      activeTab="home"
-      showBack={false}
-    >
-      {/* Card destaque do dia (dinâmico) */}
-      <section className="mb-4">
-        <div className="rounded-xl bg-sky-900 text-slate-50 p-4 shadow-sm">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">⚡</span>
-            <h2 className="text-sm font-semibold uppercase tracking-wide">
-              {destaque.titulo}
-            </h2>
-          </div>
-          <p className="text-xs text-slate-200 mb-2">{destaque.descricao}</p>
-          <p className="text-sm text-slate-50 mb-3">{destaque.fraseDoDia}</p>
-          <button className="text-xs font-semibold bg-amber-400 text-slate-900 px-3 py-1 rounded-full">
-            {destaque.botaoTexto}
-          </button>
-        </div>
-      </section>
+    <Layout title="Início">
+      <div className="px-4 pt-4 pb-24 max-w-md mx-auto space-y-4">
+        {/* Saudação dinâmica */}
+        <header className="space-y-1">
+          <p className="text-sm font-semibold text-slate-50">
+            {carregandoUser ? "Carregando..." : `${saudacao}, ${nomeUsuario}.`}
+          </p>
+          <p className="text-[12px] text-slate-400">
+            Qual a estratégia de hoje?
+          </p>
+        </header>
 
-      {/* Minhas mensagens favoritas (mostra só se tiver pelo menos 1) */}
-      {totalFavoritos > 0 && (
-        <section className="mb-4">
-          <div className="rounded-xl bg-white border px-3 py-3 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <p className="text-xs font-semibold text-slate-700">
-                  Minhas mensagens favoritas
-                </p>
-                <p className="text-[11px] text-slate-500">
-                  Você já tem{" "}
-                  <span className="font-semibold">{totalFavoritos}</span>{" "}
-                  frases salvas.
+        {/* Card destaque do dia */}
+        <section>
+          <div className="rounded-3xl bg-sky-500/10 border border-sky-500/40 px-4 py-3 space-y-1">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-2xl bg-sky-500 flex items-center justify-center text-[11px] font-bold text-slate-950">
+                  ⚡
+                </div>
+                <p className="text-[11px] font-semibold text-sky-200 uppercase tracking-wide">
+                  Destaque do dia
                 </p>
               </div>
-              <a
-                href="/perfil"
-                className="text-[11px] text-sky-700 font-semibold underline"
-              >
-                Ver todas
-              </a>
             </div>
-
-            <div className="flex flex-col gap-2">
-              {favoritosPreview.map((frase, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-lg border px-2 py-2 text-xs text-slate-700 bg-slate-50"
-                >
-                  {frase}
-                </div>
-              ))}
-            </div>
+            <p className="text-sm font-semibold text-slate-50">
+              {tituloDestaque}
+            </p>
+            <p className="text-[12px] text-slate-200">
+              Hoje eu separei algumas mensagens prontas para você quebrar o gelo
+              sem passar vergonha. É só clicar e colar.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                // Leva para uma vibe padrão (ex: Amor & Boletos)
+                window.location.href = "/vibes/amor-boletos";
+              }}
+              className="mt-2 inline-flex items-center gap-1 rounded-full bg-sky-500 text-slate-950 text-[11px] font-semibold px-3 py-1.5"
+            >
+              Ver dicas do dia
+              <span>›</span>
+            </button>
           </div>
         </section>
-      )}
 
-      {/* Botão de emergência (link para /emergencia) */}
-      <section className="mb-4">
-        <h3 className="text-sm font-semibold text-slate-700 mb-2">
-          Precisa de ajuda agora?
-        </h3>
-        <a
-          href="/emergencia"
-          className="w-full flex flex-col items-start justify-between rounded-xl border border-sky-300 bg-sky-50 px-4 py-3 shadow-sm"
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-lg">🚨</span>
-            <span className="font-semibold text-slate-800">
-              Botão de Emergência
-            </span>
-          </div>
-          <p className="text-xs text-slate-600">
-            Tô no encontro e travei. Me dá um papo pronto agora.
+        {/* Botão de emergência */}
+        <section className="space-y-2">
+          <p className="text-[12px] text-slate-400">
+            Travou no meio da conversa ou do encontro?
           </p>
-        </a>
-      </section>
-
-      {/* Vibes (com links diretos para as vibes principais) */}
-      <section className="mb-4">
-        <h3 className="text-sm font-semibold text-slate-700 mb-2">
-          Escolha a vibe de hoje
-        </h3>
-
-        <div className="flex flex-col gap-2">
-          <a
-            href="/vibes/amor_boletos"
-            className="flex items-center justify-between rounded-xl bg-white border px-3 py-2 shadow-sm"
+          <button
+            type="button"
+            onClick={() => {
+              window.location.href = "/emergencia";
+            }}
+            className="w-full rounded-2xl border border-rose-500/60 bg-rose-500/10 px-4 py-3 flex items-center justify-between"
           >
-            <div>
-              <div className="flex items-center gap-2">
-                <span>🧾</span>
-                <span className="text-sm font-semibold text-slate-800">
-                  Amor &amp; Boletos (CLT)
-                </span>
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-2xl bg-rose-500 flex items-center justify-center text-[13px] font-bold text-slate-950">
+                SOS
               </div>
-              <p className="text-xs text-slate-500">
-                Pra quem tá cansado, mas carente.
-              </p>
+              <div>
+                <p className="text-[12px] font-semibold text-rose-100">
+                  Botão de emergência
+                </p>
+                <p className="text-[11px] text-rose-100/80">
+                  “Tô no encontro e travou tudo!”
+                </p>
+              </div>
             </div>
-            <span className="text-xs text-slate-400">Ver</span>
-          </a>
+            <span className="text-[16px] text-rose-100">›</span>
+          </button>
+        </section>
 
-          <a
-            href="/vibes/sofrencia"
-            className="flex items-center justify-between rounded-xl bg-white border px-3 py-2 shadow-sm"
-          >
-            <div>
-              <div className="flex items-center gap-2">
-                <span>🤠</span>
-                <span className="text-sm font-semibold text-slate-800">
-                  Modo Sofrência (Sertanejo)
-                </span>
-              </div>
-              <p className="text-xs text-slate-500">
-                Pra conquistar no ritmo do modão.
-              </p>
-            </div>
-            <span className="text-xs text-slate-400">Ver</span>
-          </a>
+        {/* Vibes resumidas */}
+        <section className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-[12px] font-semibold text-slate-200">
+              Navegar por vibes
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = "/vibes";
+              }}
+              className="text-[11px] text-sky-400 underline underline-offset-4"
+            >
+              Ver todas
+            </button>
+          </div>
 
-          <a
-            href="/vibes/reality"
-            className="flex items-center justify-between rounded-xl bg-white border px-3 py-2 shadow-sm"
-          >
-            <div>
-              <div className="flex items-center gap-2">
-                <span>🎭</span>
-                <span className="text-sm font-semibold text-slate-800">
-                  Vibe Reality Show
-                </span>
-              </div>
-              <p className="text-xs text-slate-500">
-                Frases dignas de final de BBB.
-              </p>
-            </div>
-            <span className="text-xs text-slate-400">Ver</span>
-          </a>
-        </div>
-      </section>
+          <div className="flex gap-3 overflow-x-auto pb-1 hide-scrollbar">
+            {vibesResumo.map((vibe) => (
+              <button
+                key={vibe.id}
+                type="button"
+                onClick={() => {
+                  window.location.href = `/vibes/${vibe.id}`;
+                }}
+                className="min-w-[180px] max-w-[190px] rounded-2xl bg-slate-900/60 border border-slate-800 px-3 py-3 text-left"
+              >
+                <p className="text-[12px] font-semibold text-slate-50">
+                  {vibe.titulo}
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  {vibe.descricao}
+                </p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Favoritos (resumão) */}
+        <section className="space-y-2">
+          <p className="text-[12px] font-semibold text-slate-200">
+            Minhas mensagens favoritas
+          </p>
+          <p className="text-[11px] text-slate-400">
+            Em breve você vai ver aqui as frases que marcar como favoritas nas
+            vibes. Por enquanto, explore à vontade e já vai salvando o que
+            curtir.
+          </p>
+        </section>
+      </div>
     </Layout>
   );
 }
