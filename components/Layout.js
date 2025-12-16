@@ -1,188 +1,216 @@
 // components/Layout.js
-import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { Home, Sparkles, Brain, User } from "lucide-react";
 
-export default function Layout({
-  children,
-  title,
-  subtitle,
-  showBack = false,
-  backHref = "/",
-  activeTab = "home",
-}) {
-  const [darkMode, setDarkMode] = useState(false);
+export default function Layout({ title, children }) {
+  const router = useRouter();
 
-  // Carrega tema salvo no localStorage (se existir)
+  const [theme, setTheme] = useState("dark");
+  const [mounted, setMounted] = useState(false);
+
+  // Descobre tema inicial: localStorage ou tema do sistema
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    function getInitialTheme() {
+      if (typeof window === "undefined") return "dark";
 
-    try {
-      const salvo = localStorage.getItem("papopronto_tema");
-      if (salvo === "dark") {
-        setDarkMode(true);
+      const stored = window.localStorage.getItem("papopronto_tema");
+      if (stored === "light" || stored === "dark") {
+        return stored;
       }
-    } catch (erro) {
-      console.error("Erro ao ler tema salvo:", erro);
+
+      const prefersDark =
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+      return prefersDark ? "dark" : "light";
     }
+
+    const initial = getInitialTheme();
+    setTheme(initial);
+    setMounted(true);
   }, []);
 
-  // Salva tema sempre que trocar
+  // Aplica tema no <html> e salva no localStorage
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!mounted) return;
+    if (typeof document === "undefined") return;
 
-    try {
-      localStorage.setItem("papopronto_tema", darkMode ? "dark" : "light");
-    } catch (erro) {
-      console.error("Erro ao salvar tema:", erro);
+    const root = document.documentElement;
+
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
     }
-  }, [darkMode]);
 
-  function toggleTema() {
-    setDarkMode((valorAtual) => !valorAtual);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("papopronto_tema", theme);
+    }
+  }, [theme, mounted]);
+
+  const isActive = (path) => router.pathname === path;
+
+  const handleNav = (path) => {
+    if (router.pathname !== path) {
+      router.push(path);
+    }
+  };
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
+
+  const isPerfil = router.pathname === "/perfil";
+
+  // Enquanto não sabe o tema, evita piscar
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-10 w-10 rounded-full border-2 border-sky-500 border-t-transparent animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-200 font-semibold">
+            Abrindo seu PapoPronto...
+          </p>
+          <p className="text-[11px] text-slate-500">
+            Ajustando o tema de acordo com o seu aparelho.
+          </p>
+        </div>
+      </div>
+    );
   }
 
-  // Classes baseadas no tema
-  const pageBg = darkMode ? "bg-slate-950" : "bg-slate-50";
-  const appBg = darkMode ? "bg-slate-950" : "bg-slate-50";
-
-  const headerBg = darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200";
-  const headerTitle = darkMode ? "text-slate-100" : "text-slate-800";
-  const headerSubtitle = darkMode ? "text-slate-400" : "text-slate-500";
-  const headerBrand = darkMode ? "text-slate-400" : "text-slate-500";
-
-  const avatarBg = darkMode ? "bg-slate-700 text-slate-100" : "bg-slate-200 text-slate-600";
-  const toggleBg = darkMode ? "bg-slate-800 text-slate-100" : "bg-slate-100 text-slate-700";
-
-  const mainTitle = darkMode ? "text-slate-100" : "text-slate-800";
-  const mainSubtitle = darkMode ? "text-slate-400" : "text-slate-500";
-
-  const navBg = darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200";
-  const navActive = darkMode ? "text-sky-400" : "text-sky-700";
-  const navInactive = darkMode ? "text-slate-400" : "text-slate-500";
+  // Cores base por tema
+  const containerBg =
+    theme === "dark" ? "bg-slate-950" : "bg-slate-100"; // fundo geral off-white no claro
+  const cardBg =
+    theme === "dark" ? "bg-slate-950" : "bg-slate-50"; // cards/fundo interno ligeiramente mais claro
+  const borderColor =
+    theme === "dark" ? "border-slate-800" : "border-slate-200";
+  const textTitle =
+    theme === "dark" ? "text-slate-50" : "text-sky-900"; // azul marinho no claro
+  const textSubtitle =
+    theme === "dark" ? "text-slate-400" : "text-slate-500";
 
   return (
-    <div className={`min-h-screen flex justify-center ${pageBg}`}>
-      {/* Container central com largura máxima (app "mobile" no centro da tela) */}
-      <div className={`flex flex-col w-full max-w-md ${appBg} relative`}>
-        {/* Cabeçalho */}
+    <div className={`min-h-screen ${containerBg} flex justify-center`}>
+      <div className="w-full max-w-md flex flex-col">
+        {/* Cabeçalho fixo */}
         <header
-          className={`flex items-center justify-between px-4 py-3 border-b ${headerBg}`}
+          className={`${cardBg} ${borderColor} border-b px-4 pt-3 pb-2 flex items-center justify-between`}
         >
-          {showBack ? (
-            <>
-              <div className="flex items-center gap-2">
-                <a
-                  href={backHref}
-                  className={`text-xl ${darkMode ? "text-slate-200" : "text-slate-700"}`}
-                >
-                  ←
-                </a>
-                <div>
-                  <h1 className={`text-base font-semibold ${headerTitle}`}>
-                    {title}
-                  </h1>
-                  {subtitle && (
-                    <p className={`text-xs ${headerSubtitle}`}>{subtitle}</p>
-                  )}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={toggleTema}
-                className={`text-lg px-2 py-1 rounded-full ${toggleBg}`}
-                title={
-                  darkMode
-                    ? "Mudar para modo claro"
-                    : "Mudar para modo escuro"
-                }
-              >
-                {darkMode ? "☀️" : "🌙"}
-              </button>
-            </>
-          ) : (
-            <>
-              <div>
-                <h1 className={`text-sm ${headerBrand}`}>PapoPronto</h1>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={toggleTema}
-                  className={`text-lg px-2 py-1 rounded-full ${toggleBg}`}
-                  title={
-                    darkMode
-                      ? "Mudar para modo claro"
-                      : "Mudar para modo escuro"
-                  }
-                >
-                  {darkMode ? "☀️" : "🌙"}
-                </button>
-                <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold ${avatarBg}`}
-                >
-                  PP
-                </div>
-              </div>
-            </>
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-2xl bg-sky-500 flex items-center justify-center text-white text-sm font-bold">
+              PP
+            </div>
+            <div>
+              <p className={`text-sm font-semibold ${textTitle}`}>PapoPronto</p>
+              <p className={`text-[11px] ${textSubtitle}`}>
+                Conselheiro amoroso brasileiro
+              </p>
+            </div>
+          </div>
+
+          {/* Botão de tema: só na página Perfil */}
+          {isPerfil && (
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold
+                border-slate-700 text-slate-200 bg-slate-900/60
+                dark:border-slate-600 dark:bg-slate-800/80"
+            >
+              <span>{theme === "dark" ? "Tema escuro" : "Tema claro"}</span>
+            </button>
           )}
         </header>
 
-        {/* Conteúdo */}
-        <main className="flex-1 px-4 py-4 pb-20">
-          {/* Quando não há "showBack", a Home usa o título dentro do conteúdo */}
-          {!showBack && title && (
-            <section className="mb-4">
-              <h2 className={`text-xl font-semibold ${mainTitle}`}>{title}</h2>
-              {subtitle && (
-                <p className={`text-sm ${mainSubtitle}`}>{subtitle}</p>
-              )}
-            </section>
-          )}
+        {/* Conteúdo da página */}
+        <main className={`${cardBg} flex-1`}>{children}</main>
 
-          {children}
-        </main>
-
-        {/* Menu inferior */}
+        {/* Navegação inferior */}
         <nav
-          className={`fixed bottom-0 left-0 right-0 border-t px-4 py-2 flex justify-center ${navBg}`}
+          className={`${cardBg} ${borderColor} border-t px-4 py-2 flex justify-between`}
         >
-          <div className="w-full max-w-md flex justify-between">
-            <a
-              href="/"
-              className={`flex flex-col items-center text-xs ${
-                activeTab === "home" ? navActive : navInactive
+          <button
+            type="button"
+            onClick={() => handleNav("/")}
+            className="flex flex-col items-center flex-1"
+          >
+            <Home
+              className={`h-5 w-5 ${
+                isActive("/") ? "text-sky-400" : "text-slate-400"
+              }`}
+              aria-hidden="true"
+            />
+            <span
+              className={`text-[10px] ${
+                isActive("/") ? "text-sky-400" : "text-slate-400"
               }`}
             >
-              <span>🏠</span>
-              <span>Início</span>
-            </a>
-            <a
-              href="/vibes"
-              className={`flex flex-col items-center text-xs ${
-                activeTab === "vibes" ? navActive : navInactive
+              Home
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleNav("/vibes")}
+            className="flex flex-col items-center flex-1"
+          >
+            <Sparkles
+              className={`h-5 w-5 ${
+                isActive("/vibes") ? "text-sky-400" : "text-slate-400"
+              }`}
+              aria-hidden="true"
+            />
+            <span
+              className={`text-[10px] ${
+                isActive("/vibes") ? "text-sky-400" : "text-slate-400"
               }`}
             >
-              <span>📂</span>
-              <span>Frases</span>
-            </a>
-            <a
-              href="/guru"
-              className={`flex flex-col items-center text-xs ${
-                activeTab === "guru" ? navActive : navInactive
+              Vibes
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleNav("/guru")}
+            className="flex flex-col items-center flex-1"
+          >
+            <Brain
+              className={`h-5 w-5 ${
+                isActive("/guru") ? "text-sky-400" : "text-slate-400"
+              }`}
+              aria-hidden="true"
+            />
+            <span
+              className={`text-[10px] ${
+                isActive("/guru") ? "text-sky-400" : "text-slate-400"
               }`}
             >
-              <span>🤖</span>
-              <span>Guru IA</span>
-            </a>
-            <a
-              href="/perfil"
-              className={`flex flex-col items-center text-xs ${
-                activeTab === "perfil" ? navActive : navInactive
+              Guru IA
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleNav("/perfil")}
+            className="flex flex-col items-center flex-1"
+          >
+            <User
+              className={`h-5 w-5 ${
+                isActive("/perfil") ? "text-sky-400" : "text-slate-400"
+              }`}
+              aria-hidden="true"
+            />
+            <span
+              className={`text-[10px] ${
+                isActive("/perfil") ? "text-sky-400" : "text-slate-400"
               }`}
             >
-              <span>👤</span>
-              <span>Perfil</span>
-            </a>
-          </div>
+              Perfil
+            </span>
+          </button>
         </nav>
       </div>
     </div>
