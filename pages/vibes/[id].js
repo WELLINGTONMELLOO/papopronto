@@ -10,6 +10,28 @@ export default function FrasesPorVibePage() {
 
   const [favoritos, setFavoritos] = useState([]);
 
+  // Tema (mesma lógica do Perfil)
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const stored = window.localStorage.getItem("papopronto_tema");
+    if (stored === "dark") {
+      setIsDark(true);
+      return;
+    }
+    if (stored === "light") {
+      setIsDark(false);
+      return;
+    }
+
+    const prefersDark =
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+    setIsDark(prefersDark);
+  }, []);
+
   // Carregar frases da vibe atual
   const frases = id ? frasesPorVibe[id] || [] : [];
 
@@ -78,6 +100,24 @@ export default function FrasesPorVibePage() {
     });
   }
 
+  // Classes alinhadas com Home/Perfil
+  const cardBg = isDark ? "bg-slate-900" : "bg-white";
+  const cardBorder = isDark ? "border-slate-700" : "border-slate-200";
+  const textoPrincipal = isDark ? "text-slate-50" : "text-slate-800";
+  const textoSecundario = isDark ? "text-slate-300" : "text-slate-500";
+
+  const btnCopyBorder = isDark ? "border-sky-500" : "border-sky-400";
+  const btnCopyText = isDark ? "text-sky-300" : "text-sky-700";
+
+  const btnZapBorder = isDark ? "border-emerald-500" : "border-emerald-400";
+  const btnZapText = isDark ? "text-emerald-300" : "text-emerald-700";
+
+  // Estilo do card PRO (no dark não fica “brancão”)
+  const proBg = isDark ? "bg-amber-900/20" : "bg-amber-50";
+  const proBorder = isDark ? "border-amber-700" : "border-amber-300";
+  const proTitle = isDark ? "text-amber-200" : "text-amber-800";
+  const proText = isDark ? "text-amber-100" : "text-amber-900";
+
   // Enquanto o id ainda não chegou
   if (!id) {
     return (
@@ -88,7 +128,7 @@ export default function FrasesPorVibePage() {
         subtitle=""
         activeTab="vibes"
       >
-        <p className="text-xs text-slate-500">
+        <p className={`text-xs ${textoSecundario}`}>
           Carregando frases da vibe selecionada.
         </p>
       </Layout>
@@ -105,16 +145,18 @@ export default function FrasesPorVibePage() {
         subtitle={subtituloVibe}
         activeTab="vibes"
       >
-        <div className="rounded-xl bg-amber-50 border border-amber-300 px-3 py-3 shadow-sm">
-          <p className="text-sm font-semibold text-amber-800 mb-1">
+        <div
+          className={`rounded-xl border px-3 py-3 shadow-sm ${proBg} ${proBorder}`}
+        >
+          <p className={`text-sm font-semibold mb-1 ${proTitle}`}>
             Conteúdo PRO em breve
           </p>
-          <p className="text-xs text-amber-900 mb-2">
+          <p className={`text-xs mb-2 ${proText}`}>
             Aqui vão ficar as cantadas mais afiadas, baseadas em contexto,
             psicologia e timing de conversa. Essa vibe será parte da versão
             PRO do PapoPronto.
           </p>
-          <p className="text-[11px] text-amber-900 mb-3">
+          <p className={`text-[11px] mb-3 ${proText}`}>
             Por enquanto você pode usar todas as outras vibes liberadas enquanto
             a casa prepara esse modo turbo.
           </p>
@@ -145,7 +187,7 @@ export default function FrasesPorVibePage() {
     >
       <div className="flex flex-col gap-3">
         {frases.length === 0 && (
-          <p className="text-xs text-slate-500">
+          <p className={`text-xs ${textoSecundario}`}>
             Ainda não temos frases cadastradas para esta vibe.
           </p>
         )}
@@ -156,10 +198,10 @@ export default function FrasesPorVibePage() {
           return (
             <div
               key={index}
-              className="rounded-xl bg-white border px-3 py-3 shadow-sm"
+              className={`rounded-xl border px-3 py-3 shadow-sm ${cardBg} ${cardBorder}`}
             >
               <div className="flex items-start justify-between gap-2 mb-2">
-                <p className="text-sm text-slate-800">{texto}</p>
+                <p className={`text-sm ${textoPrincipal}`}>{texto}</p>
                 <button
                   type="button"
                   onClick={() => toggleFavorito(texto)}
@@ -176,7 +218,7 @@ export default function FrasesPorVibePage() {
 
               <div className="flex gap-2">
                 <button
-                  className="text-xs px-3 py-1 rounded-full border border-sky-400 text-sky-700"
+                  className={`text-xs px-3 py-1 rounded-full border ${btnCopyBorder} ${btnCopyText}`}
                   onClick={() => {
                     navigator.clipboard.writeText(texto);
                     alert("Papo copiado. Agora é com você 😉");
@@ -185,7 +227,7 @@ export default function FrasesPorVibePage() {
                   Copiar
                 </button>
                 <button
-                  className="text-xs px-3 py-1 rounded-full border border-emerald-400 text-emerald-700"
+                  className={`text-xs px-3 py-1 rounded-full border ${btnZapBorder} ${btnZapText}`}
                   onClick={() => {
                     const url = `https://wa.me/?text=${encodeURIComponent(
                       texto

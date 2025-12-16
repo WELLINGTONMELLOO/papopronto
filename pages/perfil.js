@@ -8,8 +8,11 @@ export default function PerfilPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [carregandoUser, setCarregandoUser] = useState(true);
-  const [favoritos, setFavoritos] = useState([]);
 
+  // Tema local da tela de Perfil (sincronizado com o que está salvo)
+  const [isDark, setIsDark] = useState(false);
+
+  // Carregar usuário logado
   useEffect(() => {
     let ativo = true;
 
@@ -23,157 +26,159 @@ export default function PerfilPage() {
       } else {
         setUser(data?.user ?? null);
       }
+
       setCarregandoUser(false);
     }
 
-    function carregarFavoritosLocal() {
-      try {
-        if (typeof window === "undefined") return;
-        const bruto = localStorage.getItem("papopronto_favoritos");
-        if (!bruto) {
-          setFavoritos([]);
-          return;
-        }
-        const parsed = JSON.parse(bruto);
-        if (Array.isArray(parsed)) {
-          setFavoritos(parsed);
-        } else {
-          setFavoritos([]);
-        }
-      } catch (err) {
-        console.error("Erro ao ler favoritos do localStorage:", err);
-        setFavoritos([]);
-      }
-    }
-
     carregarUsuario();
-    carregarFavoritosLocal();
 
     return () => {
       ativo = false;
     };
   }, []);
 
+  // Ler tema salvo ou tema do sistema
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const stored = window.localStorage.getItem("papopronto_tema");
+    if (stored === "dark") {
+      setIsDark(true);
+      return;
+    }
+    if (stored === "light") {
+      setIsDark(false);
+      return;
+    }
+
+    const prefersDark =
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+    setIsDark(prefersDark);
+  }, []);
+
   const nome =
     user?.user_metadata?.nome ||
-    (user?.email ? user.email.split("@")[0] : "—");
+    (user?.email ? user.email.split("@")[0] : "Você");
 
-  const email = user?.email || "—";
+  const email = user?.email || "";
 
-  const qtdFavoritos = favoritos.length;
-  const exemplosFavoritos = favoritos.slice(0, 3);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
-  async function handleSair() {
-    try {
-      await supabase.auth.signOut();
-      router.replace("/login");
-    } catch (err) {
-      console.error("Erro ao sair:", err);
-    }
-  }
+  // Classes de cor, alinhadas com a Home
+  const bgTela = isDark ? "bg-slate-950" : "bg-slate-100";
+  const cardBg = isDark ? "bg-slate-900" : "bg-white";
+  const cardBorder = isDark ? "border-slate-700" : "border-slate-200";
+  const tituloPrincipal = isDark ? "text-slate-50" : "text-[#0b1f33]";
+  const textoSecundario = isDark ? "text-slate-300" : "text-slate-600";
+  const etiqueta = isDark ? "text-slate-300" : "text-slate-600";
+  const separador = isDark ? "border-slate-800" : "border-slate-200";
 
   return (
     <Layout title="Perfil">
-      <div className="px-4 pt-4 pb-24 max-w-md mx-auto space-y-5">
-        {/* Cabeçalho */}
-        <header className="space-y-1">
-          <p className="text-sm font-semibold text-slate-50">
-            Meu PapoPronto
-          </p>
-          <p className="text-[12px] text-slate-400">
-            Veja seus dados básicos e um resumo do seu uso.
-          </p>
-        </header>
-
-        {/* Bloco de dados do usuário */}
-        <section className="rounded-2xl bg-slate-900/60 border border-slate-800 px-4 py-3 space-y-3">
-          <p className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide">
-            Seus dados
-          </p>
-
-          <div className="space-y-2">
-            <div>
-              <p className="text-[11px] text-slate-500">Nome</p>
-              <p className="text-sm font-semibold text-slate-50">
-                {carregandoUser ? "Carregando..." : nome}
-              </p>
-            </div>
-            <div>
-              <p className="text-[11px] text-slate-500">E-mail</p>
-              <p className="text-[12px] text-slate-200 break-all">{email}</p>
-            </div>
-          </div>
-
-          <p className="text-[11px] text-slate-500">
-            O nome exibido aqui é o mesmo que você informou no cadastro. No
-            futuro, você poderá ajustar mais detalhes do seu perfil por aqui.
-          </p>
-        </section>
-
-        {/* Bloco de favoritos */}
-        <section className="rounded-2xl bg-slate-900/60 border border-slate-800 px-4 py-3 space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide">
-              Mensagens favoritas
+      <div className={`min-h-full ${bgTela}`}>
+        <div className="px-4 pt-4 pb-24 max-w-md mx-auto space-y-5">
+          {/* Cabeçalho interno da página de perfil */}
+          <section className="mt-1 space-y-1">
+            <p
+              className={`text-[11px] font-semibold ${etiqueta} uppercase tracking-[0.16em]`}
+            >
+              PERFIL
             </p>
-            <span className="text-[11px] text-slate-400">
-              {qtdFavoritos} salva{qtdFavoritos === 1 ? "" : "s"}
-            </span>
-          </div>
-
-          {qtdFavoritos === 0 ? (
-            <p className="text-[12px] text-slate-400">
-              Você ainda não favoritou nenhuma mensagem. Entre nas vibes, toque
-              no coraçãozinho ao lado das frases que você mais curtir e elas
-              aparecem aqui.
+            <h1
+              className={`text-[20px] font-semibold ${tituloPrincipal} leading-snug`}
+            >
+              {carregandoUser ? "Carregando..." : nome}
+            </h1>
+            <p className={`text-[13px] ${textoSecundario}`}>
+              Aqui você gerencia seus dados e preferências do PapoPronto.
             </p>
-          ) : (
-            <div className="space-y-2">
-              <p className="text-[12px] text-slate-400">
-                Algumas das suas favoritas:
+          </section>
+
+          {/* Card de dados da conta */}
+          <section>
+            <div
+              className={`rounded-2xl border px-3 py-3 ${cardBg} ${cardBorder}`}
+            >
+              <p
+                className={`text-[11px] font-semibold ${etiqueta} uppercase tracking-[0.16em] mb-2`}
+              >
+                CONTA
               </p>
-              <div className="space-y-2">
-                {exemplosFavoritos.map((fav, idx) => (
-                  <div
-                    key={`${fav.id || idx}-${idx}`}
-                    className="rounded-xl bg-slate-950/60 border border-slate-800 px-3 py-2"
-                  >
-                    <p className="text-[12px] text-slate-50">
-                      {fav.texto || fav.frase || "Mensagem favorita"}
-                    </p>
-                    {fav.vibe && (
-                      <p className="text-[10px] text-slate-500 mt-0.5">
-                        Vibe: {fav.vibe}
-                      </p>
-                    )}
-                  </div>
-                ))}
+
+              <div className="space-y-1">
+                <p className={`text-[13px] ${textoSecundario}`}>Nome</p>
+                <p
+                  className={`text-[14px] font-semibold ${tituloPrincipal}`}
+                >
+                  {carregandoUser ? "—" : nome}
+                </p>
               </div>
+
+              <div className={`border-t mt-3 pt-3 ${separador}`}>
+                <p className={`text-[13px] ${textoSecundario}`}>E-mail</p>
+                <p
+                  className={`text-[14px] font-semibold break-all ${tituloPrincipal}`}
+                >
+                  {carregandoUser ? "—" : email}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Card de personalização / tema */}
+          <section>
+            <div
+              className={`rounded-2xl border px-3 py-3 ${cardBg} ${cardBorder}`}
+            >
+              <p
+                className={`text-[11px] font-semibold ${etiqueta} uppercase tracking-[0.16em] mb-2`}
+              >
+                PERSONALIZAÇÃO
+              </p>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p
+                    className={`text-[14px] font-semibold ${tituloPrincipal}`}
+                  >
+                    Tema do app
+                  </p>
+                  <p className={`text-[12px] ${textoSecundario}`}>
+                    Altere o tema no botão no topo desta tela.
+                  </p>
+                </div>
+                <span className="text-[12px] text-slate-400">
+                  {isDark ? "Escuro" : "Claro"}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          {/* Card de sessão / sair */}
+          <section>
+            <div
+              className={`rounded-2xl border px-3 py-3 ${cardBg} ${cardBorder}`}
+            >
+              <p
+                className={`text-[11px] font-semibold ${etiqueta} uppercase tracking-[0.16em] mb-2`}
+              >
+                SESSÃO
+              </p>
+
               <button
                 type="button"
-                onClick={() => router.push("/vibes")}
-                className="text-[11px] text-sky-400 underline underline-offset-4"
+                onClick={handleLogout}
+                className="w-full mt-1 inline-flex items-center justify-center rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[13px] font-semibold py-2.5 transition active:scale-[0.99]"
               >
-                Ver vibes para salvar mais
+                Sair do PapoPronto
               </button>
             </div>
-          )}
-        </section>
-
-        {/* Ações */}
-        <section className="space-y-2">
-          <button
-            type="button"
-            onClick={handleSair}
-            className="w-full rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-2.5 text-[12px] font-semibold text-slate-200 hover:bg-slate-800/80 transition"
-          >
-            Sair da conta
-          </button>
-          <p className="text-[10px] text-slate-500 text-center">
-            Ao sair, você precisará fazer login novamente para acessar suas
-            mensagens e favoritos.
-          </p>
-        </section>
+          </section>
+        </div>
       </div>
     </Layout>
   );

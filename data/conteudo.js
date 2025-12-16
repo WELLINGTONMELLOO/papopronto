@@ -6,19 +6,19 @@ export const vibes = [
     id: "amor_boletos",
     nome: "Amor & Boletos (CLT)",
     descricao: "Pra quem tá cansado, mas carente.",
-    icone: "🧾",
+    icone: "receipt", // 🧾
   },
   {
     id: "sofrencia",
     nome: "Modo Sofrência (Sertanejo)",
     descricao: "Pra conquistar no ritmo do modão.",
-    icone: "🤠",
+    icone: "music", // 🤠
   },
   {
     id: "reality",
     nome: "Vibe Reality Show",
     descricao: "Frases dignas de final de BBB.",
-    icone: "🎭",
+    icone: "tv", // 🎭 -> trocado para um ícone real estável
   },
   // VIBE PRO TRAVADA
   {
@@ -26,7 +26,7 @@ export const vibes = [
     nome: "Cantadas Psicológicas PRO",
     descricao:
       "Baseadas em contexto, timing e comportamento. Conteúdo exclusivo.",
-    icone: "🧠",
+    icone: "brain", // 🧠
     pro: true, // <- marca que é vibe PRO
   },
 ];

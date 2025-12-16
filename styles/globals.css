@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -8,7 +9,12 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+
+  /* Fonte principal (somente fontes alteradas) */
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+
+  /* Mantém sua config de mono como estava */
   --font-mono: var(--font-geist-mono);
 }
 
@@ -22,5 +28,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+
+  /* Usa a variável de fonte (somente fontes alteradas) */
+  font-family: var(--font-sans);
 }
